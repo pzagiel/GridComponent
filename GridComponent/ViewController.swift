@@ -23,6 +23,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         let price: Double
         let evol: Double
         let gain: Double
+        var weight: Double = 0
 
         var value: Double {
             return quantity * price
@@ -41,6 +42,8 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 
     var rows: [Row] = []
 
+    var totalPortfolioValue: Double = 0
+
     let sampleData: [Position] = [
         Position(symbol: "H2O Vivace FCP R", currency: "EUR", assetClass: "Hedge Fund", quantity: 18, costPrice: 63378.95, date: "13-Jun-2025", price: 81971.19, evol: -0.89, gain: 29.38),
         Position(symbol: "H2O Vivace HUSD-R", currency: "USD", assetClass: "Hedge Fund", quantity: 56, costPrice: 30330.59, date: "13-Jun-2025", price: 45303.32, evol: -0.54, gain: 49.37),
@@ -54,6 +57,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 
     override func loadView() {
         self.view = NSView(frame: NSRect(x: 0, y: 0, width: 1200, height: 800))
+        self.view.appearance = NSAppearance(named: .aqua)
 
         groupByPopup = NSPopUpButton()
         groupByPopup.translatesAutoresizingMaskIntoConstraints = false
@@ -74,6 +78,10 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         scrollView.autoresizingMask = [.width, .height]
 
         tableView = NSTableView(frame: scrollView.bounds)
+        tableView.rowHeight = 20
+        tableView.gridStyleMask = [.solidVerticalGridLineMask, .solidHorizontalGridLineMask]
+        tableView.usesAlternatingRowBackgroundColors = false
+        tableView.gridColor = .lightGray
 
         let columns = [
             ("Symbol", "symbol"),
@@ -85,7 +93,8 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             ("Evol", "evol"),
             ("YTD", "gain"),
             ("P/L (€)", "pl"),
-            ("Mkt Val", "value")
+            ("Mkt Val", "value"),
+            ("Weight", "weight")
         ]
 
         for (title, identifier) in columns {
@@ -116,19 +125,33 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         tableView.reloadData()
     }
 
+    func euroFormat(_ amount: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencySymbol = "€"
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        formatter.locale = Locale(identifier: "fr_BE")
+        return formatter.string(from: NSNumber(value: amount)) ?? String(format: "%.2f", amount)
+    }
+
+    func percentFormat(_ value: Double) -> String {
+        return String(format: "%.2f%%", value)
+    }
+
     func numberOfRows(in tableView: NSTableView) -> Int {
         return rows.count
     }
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let text = NSTextField()
-        text.isBordered = false
+        text.isBordered = true
         text.isEditable = false
         text.backgroundColor = .clear
 
         guard let columnIdentifier = tableColumn?.identifier.rawValue else { return text }
 
-        if ["quantity", "costPrice", "price", "evol", "gain", "pl", "value"].contains(columnIdentifier) {
+        if ["quantity", "costPrice", "price", "evol", "gain", "pl", "value", "weight"].contains(columnIdentifier) {
             text.alignment = .right
         }
 
@@ -138,6 +161,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             if columnIdentifier == "symbol" {
                 text.font = NSFont.boldSystemFont(ofSize: 13)
             }
+
         case .position(let p):
             switch columnIdentifier {
             case "symbol": text.stringValue = p.symbol
@@ -147,46 +171,46 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             case "date": text.stringValue = p.date
             case "price": text.stringValue = String(format: "%.2f", p.price)
             case "evol":
-                text.stringValue = String(format: "%.2f%%", p.evol)
-                text.textColor = p.evol >= 0 ? NSColor.systemGreen : NSColor.systemRed
+                text.stringValue = percentFormat(p.evol)
+                text.textColor = p.evol >= 0 ? .systemGreen : .systemRed
             case "gain":
-                text.stringValue = String(format: "%.2f%%", p.gain)
-                text.textColor = p.gain >= 0 ? NSColor.systemGreen : NSColor.systemRed
-            case "pl": text.stringValue = String(format: "%.2f", p.plAbsolute)
-            case "value": text.stringValue = String(format: "%.2f", p.value)
+                text.stringValue = percentFormat(p.gain)
+                text.textColor = p.gain >= 0 ? .systemGreen : .systemRed
+            case "pl": text.stringValue = euroFormat(p.plAbsolute)
+            case "value": text.stringValue = euroFormat(p.value)
+            case "weight": text.stringValue = percentFormat(p.weight * 100)
             default: text.stringValue = ""
             }
+
         case .subtotal(let label, let subtotal):
             switch columnIdentifier {
             case "symbol":
                 text.stringValue = label
                 text.font = NSFont.boldSystemFont(ofSize: 12)
-            case "value":
-                text.stringValue = String(format: "%.2f", subtotal.totalValue)
+                text.textColor = .systemBlue
+            case "value": text.stringValue = euroFormat(subtotal.totalValue)
             case "gain":
-                text.stringValue = String(format: "%.2f%%", subtotal.gain)
-                text.textColor = subtotal.gain >= 0 ? NSColor.systemGreen : NSColor.systemRed
-            case "pl":
-                text.stringValue = String(format: "%.2f", subtotal.pl)
-            default:
-                text.stringValue = ""
+                text.stringValue = percentFormat(subtotal.gain)
+                text.textColor = subtotal.gain >= 0 ? .systemGreen : .systemRed
+            case "pl": text.stringValue = euroFormat(subtotal.pl)
+            default: text.stringValue = ""
             }
+
         case .grandTotal(let total):
             switch columnIdentifier {
             case "symbol":
                 text.stringValue = "Total Portfolio"
                 text.font = NSFont.boldSystemFont(ofSize: 13)
-            case "value":
-                text.stringValue = String(format: "%.2f", total.totalValue)
+                text.textColor = .systemBlue
+            case "value": text.stringValue = euroFormat(total.totalValue)
             case "gain":
-                text.stringValue = String(format: "%.2f%%", total.gain)
-                text.textColor = total.gain >= 0 ? NSColor.systemGreen : NSColor.systemRed
-            case "pl":
-                text.stringValue = String(format: "%.2f", total.pl)
-            default:
-                text.stringValue = ""
+                text.stringValue = percentFormat(total.gain)
+                text.textColor = total.gain >= 0 ? .systemGreen : .systemRed
+            case "pl": text.stringValue = euroFormat(total.pl)
+            default: text.stringValue = ""
             }
         }
+
         return text
     }
 
@@ -201,7 +225,15 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     }
 
     func buildRows(from positions: [Position], groupedBy: (Position) -> String) -> [Row] {
-        let grouped = Dictionary(grouping: positions, by: groupedBy)
+        var enrichedPositions = positions
+        let total = enrichedPositions.reduce(0) { $0 + $1.value }
+        totalPortfolioValue = total
+
+        for i in 0..<enrichedPositions.count {
+            enrichedPositions[i].weight = enrichedPositions[i].value / total
+        }
+
+        let grouped = Dictionary(grouping: enrichedPositions, by: groupedBy)
         var result: [Row] = []
 
         var totalVal: Double = 0
