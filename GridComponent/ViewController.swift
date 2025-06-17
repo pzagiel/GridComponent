@@ -19,6 +19,9 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     }
 
     struct Position {
+        var plAbsolute: Double {
+            return value - (quantity * costPrice)
+        }
         let symbol: String
         let currency: String
         let assetClass: String
@@ -66,7 +69,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     var rows: [Row] = []
 
     override func loadView() {
-        self.view = NSView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+        self.view = NSView(frame: NSRect(x: 0, y: 0, width: 1200, height: 800))
 
         groupByPopup = NSPopUpButton()
         groupByPopup.translatesAutoresizingMaskIntoConstraints = false
@@ -89,6 +92,8 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         tableView = NSTableView(frame: scrollView.bounds)
 
         let columns = [
+            ("P/L (€)", "pl") ,
+            ("Mkt Val", "value"),
             ("Symbol", "symbol"),
             ("Currency", "currency"),
             ("Asset Class", "assetClass"),
@@ -150,6 +155,8 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             }
         case .position(let p):
             switch columnIdentifier {
+            case "pl": text.stringValue = String(format: "%.2f", p.plAbsolute)
+            case "value": text.stringValue = String(format: "%.2f", p.value)
             case "symbol": text.stringValue = p.symbol
             case "currency": text.stringValue = p.currency
             case "assetClass": text.stringValue = p.assetClass
@@ -214,7 +221,10 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 
             let totalValue = group.reduce(0) { $0 + $1.value }
             let totalGain = group.reduce(0) { $0 + $1.gain }
-            result.append(.subtotal("Total \(key)", SubtotalData(totalValue: totalValue, gain: totalGain)))
+            let totalPL = group.reduce(0) { $0 + ($1.value - ($1.quantity * $1.costPrice)) }
+            //result.append(.subtotal("Total \(key)", SubtotalData(totalValue: totalValue, gain: totalGain, pl: totalPL)))
+
+            
 
             grandTotalValue += totalValue
             grandTotalGain += totalGain
