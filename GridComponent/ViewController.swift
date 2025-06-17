@@ -68,14 +68,22 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     override func loadView() {
         self.view = NSView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
 
-        groupByPopup = NSPopUpButton(frame: NSRect(x: 20, y: self.view.bounds.height - 40, width: 200, height: 24))
-        groupByPopup.autoresizingMask = [.maxYMargin]
+        groupByPopup = NSPopUpButton()
+        groupByPopup.translatesAutoresizingMaskIntoConstraints = false
         groupByPopup.addItems(withTitles: ["Asset Class", "Currency"])
         groupByPopup.target = self
         groupByPopup.action = #selector(groupingChanged(_:))
         self.view.addSubview(groupByPopup)
 
-        scrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: self.view.bounds.width, height: self.view.bounds.height - 50))
+        NSLayoutConstraint.activate([
+            groupByPopup.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 10),
+            groupByPopup.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 20),
+            groupByPopup.widthAnchor.constraint(equalToConstant: 200),
+            groupByPopup.heightAnchor.constraint(equalToConstant: 24)
+        ])
+
+        scrollView = NSScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.autoresizingMask = [.width, .height]
 
         tableView = NSTableView(frame: scrollView.bounds)
@@ -105,6 +113,13 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 
         scrollView.documentView = tableView
         self.view.addSubview(scrollView)
+
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: groupByPopup.bottomAnchor, constant: 10),
+            scrollView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
+        ])
     }
 
     override func viewDidLoad() {
