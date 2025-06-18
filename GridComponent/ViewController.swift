@@ -71,7 +71,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 
     override func loadView() {
         self.view = NSView(frame: NSRect(x: 0, y: 0, width: 1200, height: 800))
-        self.view.appearance = NSAppearance(named: .aqua)
+        //self.view.appearance = NSAppearance(named: .aqua)
 
         groupByPopup = NSPopUpButton()
         groupByPopup.translatesAutoresizingMaskIntoConstraints = false
@@ -107,12 +107,19 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         scrollView = NSScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.autoresizingMask = [.width, .height]
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = false
+        scrollView.autohidesScrollers = false
+        scrollView.automaticallyAdjustsContentInsets = false
+        scrollView.documentView = tableView
+
+
 
         tableView = NSTableView(frame: scrollView.bounds)
         tableView.rowHeight = 20
         tableView.gridStyleMask = [.solidVerticalGridLineMask, .solidHorizontalGridLineMask]
         tableView.usesAlternatingRowBackgroundColors = false
-        tableView.gridColor = .lightGray
+        //tableView.gridColor = .lightGray
 
         let columns = [
             ("Symbol", "symbol"),
