@@ -13,6 +13,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBOutlet var window: NSWindow!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        //NSApp.appearance = NSAppearance(named: .darkAqua)
         let viewController = ViewController()
         window = NSWindow(contentViewController: viewController)
         window.makeKeyAndOrderFront(nil)
@@ -27,6 +28,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
+    @IBAction func setLightAppearance(_ sender: Any?) {
+        NSApp.appearance = NSAppearance(named: .aqua)
+    }
+
+    @IBAction func setDarkAppearance(_ sender: Any?) {
+        NSApp.appearance = NSAppearance(named: .darkAqua)
+    }
+
+    
 
 }
 
