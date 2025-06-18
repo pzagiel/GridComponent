@@ -121,7 +121,7 @@
                             </menuItem>
                             <menuItem title="Print…" keyEquivalent="p" id="aTl-1u-JFS">
                                 <connections>
-                                    <action selector="printDocument:" target="-1" id="iAY-ea-jHe"/>
+                                    <action selector="printDocument:" target="-1" id="IOS-wS-7Se"/>
                                 </connections>
                             </menuItem>
                         </items>
