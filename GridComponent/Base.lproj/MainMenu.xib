@@ -616,14 +616,14 @@
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="Appearance" id="f8t-jz-INf">
                                     <items>
-                                        <menuItem title="aqua" id="IFQ-ts-aOk">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        <menuItem title="aqua" keyEquivalent="a" id="IFQ-ts-aOk">
+                                            <modifierMask key="keyEquivalentModifierMask" option="YES"/>
                                             <connections>
                                                 <action selector="setLightAppearance:" target="Voe-Tx-rLC" id="JUM-n2-xEE"/>
                                             </connections>
                                         </menuItem>
-                                        <menuItem title="dark" id="QiI-Bk-DDe">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        <menuItem title="dark" keyEquivalent="d" id="QiI-Bk-DDe">
+                                            <modifierMask key="keyEquivalentModifierMask" option="YES"/>
                                             <connections>
                                                 <action selector="setDarkAppearance:" target="Voe-Tx-rLC" id="03h-8q-ix7"/>
                                             </connections>
