@@ -11,6 +11,7 @@
 		6528C3A32E0215860097D056 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6528C3A22E0215860097D056 /* Assets.xcassets */; };
 		6528C3A62E0215860097D056 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6528C3A42E0215860097D056 /* MainMenu.xib */; };
 		6528C3AE2E0215E00097D056 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6528C3AD2E0215E00097D056 /* ViewController.swift */; };
+		65F61B2F2E0325D700C7FBC3 /* PrintDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65F61B2E2E0325D700C7FBC3 /* PrintDocument.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +21,8 @@
 		6528C3A52E0215860097D056 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		6528C3A72E0215860097D056 /* GridComponent.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GridComponent.entitlements; sourceTree = "<group>"; };
 		6528C3AD2E0215E00097D056 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		65F61B2D2E031A6E00C7FBC3 /* GridComponentRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GridComponentRelease.entitlements; sourceTree = "<group>"; };
+		65F61B2E2E0325D700C7FBC3 /* PrintDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintDocument.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,11 +55,13 @@
 		6528C39F2E0215850097D056 /* GridComponent */ = {
 			isa = PBXGroup;
 			children = (
+				65F61B2D2E031A6E00C7FBC3 /* GridComponentRelease.entitlements */,
 				6528C3A02E0215850097D056 /* AppDelegate.swift */,
 				6528C3A22E0215860097D056 /* Assets.xcassets */,
 				6528C3A42E0215860097D056 /* MainMenu.xib */,
 				6528C3A72E0215860097D056 /* GridComponent.entitlements */,
 				6528C3AD2E0215E00097D056 /* ViewController.swift */,
+				65F61B2E2E0325D700C7FBC3 /* PrintDocument.swift */,
 			);
 			path = GridComponent;
 			sourceTree = "<group>";
@@ -133,6 +138,7 @@
 			files = (
 				6528C3AE2E0215E00097D056 /* ViewController.swift in Sources */,
 				6528C3A12E0215850097D056 /* AppDelegate.swift in Sources */,
+				65F61B2F2E0325D700C7FBC3 /* PrintDocument.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -295,7 +301,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = GridComponent/GridComponent.entitlements;
+				CODE_SIGN_ENTITLEMENTS = GridComponent/GridComponentRelease.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
