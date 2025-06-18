@@ -5,7 +5,8 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     var tableView: NSTableView!
     var scrollView: NSScrollView!
     var groupByPopup: NSPopUpButton!
-
+    var fontSizePopup: NSPopUpButton!
+    var gridFontSize: CGFloat = 16
     enum Row {
         case groupHeader(String)
         case position(Position)
@@ -85,7 +86,24 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             groupByPopup.widthAnchor.constraint(equalToConstant: 200),
             groupByPopup.heightAnchor.constraint(equalToConstant: 24)
         ])
+        
+        // FontSize PopupUp menu
+        fontSizePopup = NSPopUpButton()
+        fontSizePopup.translatesAutoresizingMaskIntoConstraints = false
+        fontSizePopup.addItems(withTitles: ["12","13","14","15","16","17","18","20","22","24"])
+        fontSizePopup.selectItem(withTitle: "\(Int(gridFontSize))")
+        fontSizePopup.target = self
+        fontSizePopup.action = #selector(fontSizeChanged(_:))
+        self.view.addSubview(fontSizePopup)
 
+        NSLayoutConstraint.activate([
+            fontSizePopup.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 10),
+            fontSizePopup.leadingAnchor.constraint(equalTo: groupByPopup.trailingAnchor, constant: 20),
+            fontSizePopup.widthAnchor.constraint(equalToConstant: 100),
+            fontSizePopup.heightAnchor.constraint(equalToConstant: 24)
+        ])
+
+        
         scrollView = NSScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.autoresizingMask = [.width, .height]
@@ -161,7 +179,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         text.isBordered = false
         text.isEditable = false
         text.backgroundColor = .clear
-        text.font = NSFont(name: "Times-Roman", size: 16)
+        text.font = NSFont(name: "Times-Roman", size: gridFontSize)
 
         guard let columnIdentifier = tableColumn?.identifier.rawValue else { return text }
 
@@ -173,7 +191,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         case .groupHeader(let title):
             text.stringValue = columnIdentifier == "symbol" ? title : ""
             if columnIdentifier == "symbol" {
-                text.font = NSFont.boldSystemFont(ofSize: 16)
+                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
             }
 
         case .position(let p):
@@ -200,7 +218,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             switch columnIdentifier {
             case "symbol":
                 text.stringValue = label
-                text.font = NSFont.boldSystemFont(ofSize: 16)
+                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
                 text.textColor = .systemBlue
             case "value": text.stringValue = euroFormat(subtotal.totalValue)
             case "gain":
@@ -214,7 +232,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             switch columnIdentifier {
             case "symbol":
                 text.stringValue = "Total Portfolio"
-                text.font = NSFont.boldSystemFont(ofSize: 16)
+                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
                 text.textColor = .systemBlue
             case "value": text.stringValue = euroFormat(total.totalValue)
             case "gain":
@@ -237,7 +255,17 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         }
         tableView.reloadData()
     }
+    
+    @objc func fontSizeChanged(_ sender: NSPopUpButton) {
+        if let selected = sender.titleOfSelectedItem,
+           let selectedInt = Int(selected) {
+            gridFontSize = CGFloat(selectedInt)
+            tableView.reloadData()
+        }
+    }
 
+
+    
     func buildRows(from positions: [Position], groupedBy: (Position) -> String) -> [Row] {
         var enrichedPositions = positions
         let total = enrichedPositions.reduce(0) { $0 + $1.value }
