@@ -158,9 +158,10 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let text = NSTextField()
-        text.isBordered = true
+        text.isBordered = false
         text.isEditable = false
         text.backgroundColor = .clear
+        text.font = NSFont(name: "Times-Roman", size: 16)
 
         guard let columnIdentifier = tableColumn?.identifier.rawValue else { return text }
 
@@ -172,7 +173,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         case .groupHeader(let title):
             text.stringValue = columnIdentifier == "symbol" ? title : ""
             if columnIdentifier == "symbol" {
-                text.font = NSFont.boldSystemFont(ofSize: 13)
+                text.font = NSFont.boldSystemFont(ofSize: 16)
             }
 
         case .position(let p):
@@ -199,7 +200,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             switch columnIdentifier {
             case "symbol":
                 text.stringValue = label
-                text.font = NSFont.boldSystemFont(ofSize: 12)
+                text.font = NSFont.boldSystemFont(ofSize: 16)
                 text.textColor = .systemBlue
             case "value": text.stringValue = euroFormat(subtotal.totalValue)
             case "gain":
@@ -213,7 +214,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             switch columnIdentifier {
             case "symbol":
                 text.stringValue = "Total Portfolio"
-                text.font = NSFont.boldSystemFont(ofSize: 13)
+                text.font = NSFont.boldSystemFont(ofSize: 16)
                 text.textColor = .systemBlue
             case "value": text.stringValue = euroFormat(total.totalValue)
             case "gain":
