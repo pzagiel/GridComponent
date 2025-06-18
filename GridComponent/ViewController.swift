@@ -76,7 +76,53 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         gridFontSize = gridFont.pointSize
         tableView.reloadData()
     }
+    
+    @IBAction func runPageLayout(_ sender: Any?) {
+        let pageLayout = NSPageLayout()
+        let printInfo = NSPrintInfo.shared
+        pageLayout.runModal(with: printInfo)
+    }
 
+    @IBAction func printDocument(_ sender: Any?) {
+        let printOperation = NSPrintOperation(view: self.tableView)
+        printOperation.run()
+    }
+    
+    func viewForPrinting() -> NSView {
+        let headerView = tableView.headerView!
+        let contentView = tableView.enclosingScrollView!.documentView!
+
+        // Taille totale = hauteur de l’en-tête + hauteur du contenu
+        let totalHeight = headerView.frame.height + contentView.frame.height
+        let totalWidth = contentView.frame.width
+
+        let containerView = NSView(frame: NSRect(x: 0, y: 0, width: totalWidth, height: totalHeight))
+
+        // Copier l’en-tête
+        let headerCopy = NSTableHeaderView(frame: headerView.frame)
+        headerCopy.tableView = tableView
+        headerCopy.frame.origin = .zero
+        containerView.addSubview(headerCopy)
+
+        // Copier la table elle-même
+        let tableCopy = NSTableView(frame: tableView.frame)
+        for column in tableView.tableColumns {
+            tableCopy.addTableColumn(column)
+        }
+        tableCopy.delegate = tableView.delegate
+        tableCopy.dataSource = tableView.dataSource
+        tableCopy.headerView = nil // Sinon double en-tête
+        tableCopy.reloadData()
+
+        let scroll = NSScrollView(frame: NSRect(x: 0, y: headerView.frame.height, width: totalWidth, height: contentView.frame.height))
+        scroll.documentView = tableCopy
+        scroll.hasVerticalScroller = false
+        scroll.hasHorizontalScroller = false
+        scroll.borderType = .noBorder
+        containerView.addSubview(scroll)
+
+        return containerView
+    }
 
 
     
