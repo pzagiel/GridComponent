@@ -263,7 +263,11 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             tableView.reloadData()
         }
     }
-
+    
+    // adjust height of rows dynamicaly
+    func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
+        return gridFontSize + 6 // ajustement souple (padding vertical)
+    }
 
     
     func buildRows(from positions: [Position], groupedBy: (Position) -> String) -> [Row] {
