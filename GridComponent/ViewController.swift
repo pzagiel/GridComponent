@@ -7,6 +7,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     var groupByPopup: NSPopUpButton!
     var fontSizePopup: NSPopUpButton!
     var gridFontSize: CGFloat = 16
+    var gridFont: NSFont = NSFont(name: "Times-Roman", size: 16) ?? NSFont.systemFont(ofSize: 16)
     enum Row {
         case groupHeader(String)
         case position(Position)
@@ -68,7 +69,17 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         Position(symbol: "JPY Cash", currency: "JPY", assetClass: "Cash", quantity: 2220427, costPrice: 1.0, date: "-", price: 1.0, evol: 0.00, gain: 0.00),
         Position(symbol: "USD Dollar", currency: "USD", assetClass: "Cash", quantity: 609318, costPrice: 1.0, date: "-", price: 1.0, evol: 0.00, gain: 0.00)
     ]
+    @objc func changeFont(_ sender: NSFontManager?) {
+        guard let manager = sender else { return }
 
+        gridFont = manager.convert(gridFont)
+        gridFontSize = gridFont.pointSize
+        tableView.reloadData()
+    }
+
+
+
+    
     override func loadView() {
         self.view = NSView(frame: NSRect(x: 0, y: 0, width: 1200, height: 800))
         //self.view.appearance = NSAppearance(named: .aqua)
@@ -159,6 +170,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        NSFontManager.shared.target = self
         rows = buildRows(from: sampleData) { $0.assetClass }
         tableView.reloadData()
     }
@@ -186,7 +198,9 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         text.isBordered = false
         text.isEditable = false
         text.backgroundColor = .clear
-        text.font = NSFont(name: "Times-Roman", size: gridFontSize)
+        //text.font = NSFont(name: "Times-Roman", size: gridFontSize)
+        // Get Font of Font Manager
+        text.font = gridFont
 
         guard let columnIdentifier = tableColumn?.identifier.rawValue else { return text }
 
