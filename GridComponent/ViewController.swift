@@ -84,10 +84,52 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     }
 
     @IBAction func printDocument(_ sender: Any?) {
-        let printOperation = NSPrintOperation(view: self.tableView)
-        printOperation.run()
+        let printView = PrintDocument(tableView: tableView)
+        let printInfo = NSPrintInfo.shared
+        let printOperation = NSPrintOperation(view: printView, printInfo: printInfo)
+         printOperation.run()
     }
-    
+    class PrintDocument: NSView {
+        let tableView: NSTableView
+
+        init(tableView: NSTableView) {
+            self.tableView = tableView
+
+            // Calcule la taille totale (en-tête + contenu)
+            let headerHeight = tableView.headerView?.frame.height ?? 0
+            let contentHeight = tableView.frame.height
+            let totalSize = NSSize(width: tableView.frame.width, height: headerHeight + contentHeight)
+
+            super.init(frame: NSRect(origin: .zero, size: totalSize))
+
+            // Ajouter une copie de l’en-tête
+            if let header = tableView.headerView {
+                let headerCopy = NSTableHeaderView(frame: NSRect(x: 0, y: contentHeight, width: header.frame.width, height: header.frame.height))
+                headerCopy.tableView = tableView
+                self.addSubview(headerCopy)
+            }
+
+            // Ajouter une copie du contenu de la table
+            let tableCopy = NSTableView(frame: tableView.frame)
+            for column in tableView.tableColumns {
+                tableCopy.addTableColumn(column)
+            }
+            tableCopy.delegate = tableView.delegate
+            tableCopy.dataSource = tableView.dataSource
+            tableCopy.headerView = nil // sinon on aura l'en-tête en double
+            tableCopy.reloadData()
+
+            let clipView = NSClipView(frame: tableView.frame)
+            clipView.documentView = tableCopy
+
+            self.addSubview(clipView)
+        }
+
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+
     func viewForPrinting() -> NSView {
         let headerView = tableView.headerView!
         let contentView = tableView.enclosingScrollView!.documentView!
