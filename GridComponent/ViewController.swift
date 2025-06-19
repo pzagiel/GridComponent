@@ -149,7 +149,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 
     
     override func loadView() {
-        self.view = NSView(frame: NSRect(x: 0, y: 0, width: 1200, height: 800))
+        self.view = NSView(frame: NSRect(x: 0, y: 0, width: 1300, height: 800))
         //self.view.appearance = NSAppearance(named: .aqua)
 
         groupByPopup = NSPopUpButton()
@@ -280,7 +280,8 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         case .groupHeader(let title):
             text.stringValue = columnIdentifier == "symbol" ? title : ""
             if columnIdentifier == "symbol" {
-                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+                text.font = NSFont.boldSystemFont(ofSize: gridFontSize+2)
+                text.textColor = .systemOrange
             }
 
         case .position(let p):
