@@ -236,6 +236,10 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(identifier))
             column.title = title
             column.width = 100
+            // Centrage du titre de colonne
+               if let headerCell = column.headerCell as? NSTableHeaderCell {
+                   headerCell.alignment = .center
+               }
             tableView.addTableColumn(column)
         }
 
