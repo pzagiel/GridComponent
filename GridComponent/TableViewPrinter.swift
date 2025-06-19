@@ -10,6 +10,7 @@ class TableViewPrinter {
         printInfo.bottomMargin = 20
         printInfo.leftMargin = 20
         printInfo.rightMargin = 20
+        // magical instruction to scale horizontaly the content of the tableview
         printInfo.horizontalPagination = .fit
         printInfo.verticalPagination = .automatic
         printInfo.isHorizontallyCentered = true
