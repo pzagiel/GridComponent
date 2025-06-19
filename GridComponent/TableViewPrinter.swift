@@ -56,15 +56,20 @@ class TableViewPrinter {
             newCol.width = col.width
             // 👉 Modifier la font de l'en-tête
             // Copier et modifier le headerCell
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.alignment = .center // C'est le code qui parait fonctionner pour le centrage des titres
+
             let attributes: [NSAttributedString.Key: Any] = [
                 .font: NSFont.boldSystemFont(ofSize: 16),
-                .foregroundColor: NSColor.darkGray
+                .foregroundColor: NSColor.darkGray,
+                .paragraphStyle: paragraphStyle
             ]
+
             let attributedTitle = NSAttributedString(string: col.title, attributes: attributes)
 
             let headerCell = col.headerCell.copy() as! NSTableHeaderCell
             headerCell.attributedStringValue = attributedTitle
-            headerCell.alignment = col.headerCell.alignment // 👈 important
+            headerCell.alignment = col.headerCell.alignment // 👈 important not sure if it work maybe paragraphStyle the solution
             newCol.headerCell = headerCell
 
             
