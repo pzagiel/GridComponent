@@ -423,7 +423,8 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 
         for (key, group) in grouped.sorted(by: { $0.key < $1.key }) {
             if showHeader {
-                result.append(.groupHeader(String(key.dropFirst(3))))
+                let label = key.count > 3 ? String(key.dropFirst(3)) : key
+                result.append(.groupHeader(label))
              }
             //result.append(.groupHeader(key))
             result += group.map { .position($0) }
@@ -432,8 +433,8 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             let gain = group.reduce(0) { $0 + $1.gain }
             let pl = group.reduce(0) { $0 + $1.plAbsolute }
             let weight = group.reduce(0) { $0 + $1.weight }
-
-            result.append(.subtotal("Total \(key.dropFirst(3))", SubtotalData(totalValue: value, pl: pl,weight: weight)))
+            let label = key.count > 3 ? String(key.dropFirst(3)) : key
+            result.append(.subtotal("Total \(label)", SubtotalData(totalValue: value, pl: pl,weight: weight)))
 
             totalVal += value
             totalGain += gain
