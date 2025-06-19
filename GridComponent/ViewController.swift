@@ -65,11 +65,11 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         Position(symbol: "Starbucks Corp", currency: "USD", assetClass: "2. Equities", quantity: 961, costPrice: 88.62, date: "17-Jun-2025", price: 91.24, evol: -2.40, gain: -0.01),
         Position(symbol: "TSMC", currency: "USD", assetClass: "2. Equities", quantity: 1450, costPrice: 139.74, date: "17-Jun-2025", price: 214.16, evol: -0.70, gain: 8.44),
         Position(symbol: "UBS Group AG", currency: "CHF", assetClass: "2. Equities", quantity: 3000, costPrice: 16.67, date: "17-Jun-2025", price: 25.84, evol: -1.07, gain: -6.82),
-        Position(symbol: "3. Gold Bullion", currency: "USD", assetClass: "3. Gold", quantity: 1378, costPrice: 125.65, date: "17-Jun-2025", price: 310.08, evol: -0.71, gain: 29.26),
+        Position(symbol: "Gold Bullion", currency: "USD", assetClass: "3. Gold", quantity: 1378, costPrice: 125.65, date: "17-Jun-2025", price: 310.08, evol: -0.71, gain: 29.26),
         Position(symbol: "CHF", currency: "CHF", assetClass: "4. Cash", quantity: 1578, costPrice: 1.0, date: "-", price: 1.0, evol: 0.00, gain: 0.00),
         Position(symbol: "EURO", currency: "EUR", assetClass: "4. Cash", quantity: 292683, costPrice: 1.0, date: "-", price: 1.0, evol: 0.00, gain: 0.00),
         Position(symbol: "GBP", currency: "GBP", assetClass: "4. Cash", quantity: 39, costPrice: 1.0, date: "-", price: 1.0, evol: 0.00, gain: 0.00),
-        Position(symbol: "JPY 4. Cash", currency: "JPY", assetClass: "4. Cash", quantity: 2220427, costPrice: 1.0, date: "-", price: 1.0, evol: 0.00, gain: 0.00),
+        Position(symbol: "JPY", currency: "JPY", assetClass: "4. Cash", quantity: 2220427, costPrice: 1.0, date: "-", price: 1.0, evol: 0.00, gain: 0.00),
         Position(symbol: "USD Dollar", currency: "USD", assetClass: "4. Cash", quantity: 609318, costPrice: 1.0, date: "-", price: 1.0, evol: 0.00, gain: 0.00)
     ]
     @objc func changeFont(_ sender: NSFontManager?) {
