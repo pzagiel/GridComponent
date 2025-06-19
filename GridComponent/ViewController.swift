@@ -38,8 +38,9 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 
     struct SubtotalData {
         let totalValue: Double
-        let gain: Double
+        //let gain: Double
         let pl: Double
+        let weight: Double
     }
 
     var rows: [Row] = []
@@ -308,11 +309,22 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
                 text.stringValue = label
                 text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
                 text.textColor = .systemBlue
-            case "value": text.stringValue = euroFormat(subtotal.totalValue)
-            case "gain":
-                text.stringValue = percentFormat(subtotal.gain)
-                text.textColor = subtotal.gain >= 0 ? .systemGreen : .systemRed
-            case "pl": text.stringValue = euroFormat(subtotal.pl)
+            case "value":
+                text.stringValue = euroFormat(subtotal.totalValue)
+                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+                text.textColor = .systemBlue
+//            case "gain":
+//                text.stringValue = percentFormat(subtotal.gain)
+//                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+//                text.textColor = subtotal.gain >= 0 ? .systemGreen : .systemRed
+            case "pl":
+                text.stringValue = euroFormat(subtotal.pl)
+                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+                text.textColor = .systemBlue
+            case "weight":
+                text.stringValue = percentFormat(subtotal.weight*100)
+                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+                text.textColor = .systemBlue
             default: text.stringValue = ""
             }
 
@@ -322,11 +334,22 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
                 text.stringValue = "Total Portfolio"
                 text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
                 text.textColor = .systemBlue
-            case "value": text.stringValue = euroFormat(total.totalValue)
-            case "gain":
-                text.stringValue = percentFormat(total.gain)
-                text.textColor = total.gain >= 0 ? .systemGreen : .systemRed
-            case "pl": text.stringValue = euroFormat(total.pl)
+            case "value":
+                text.stringValue = euroFormat(total.totalValue)
+                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+                text.textColor = .systemBlue
+//            case "gain":
+//                text.stringValue = percentFormat(total.gain)
+//                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+//                //text.textColor = total.gain >= 0 ? .systemGreen : .systemRed
+            case "pl":
+                text.stringValue = euroFormat(total.pl)
+                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+                text.textColor = .systemBlue
+            case "weight":
+                text.stringValue = percentFormat(total.weight*100)
+                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+                text.textColor = .systemBlue
             default: text.stringValue = ""
             }
         }
@@ -373,6 +396,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         var totalVal: Double = 0
         var totalGain: Double = 0
         var totalPL: Double = 0
+        var totalWeight: Double = 0
 
         for (key, group) in grouped.sorted(by: { $0.key < $1.key }) {
             result.append(.groupHeader(key))
@@ -381,15 +405,17 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             let value = group.reduce(0) { $0 + $1.value }
             let gain = group.reduce(0) { $0 + $1.gain }
             let pl = group.reduce(0) { $0 + $1.plAbsolute }
+            let weight = group.reduce(0) { $0 + $1.weight }
 
-            result.append(.subtotal("Total \(key)", SubtotalData(totalValue: value, gain: gain, pl: pl)))
+            result.append(.subtotal("Total \(key)", SubtotalData(totalValue: value, pl: pl,weight: weight)))
 
             totalVal += value
             totalGain += gain
             totalPL += pl
+            totalWeight += weight
         }
 
-        result.append(.grandTotal(SubtotalData(totalValue: totalVal, gain: totalGain, pl: totalPL)))
+        result.append(.grandTotal(SubtotalData(totalValue: totalVal, pl: totalPL,weight: totalWeight)))
         return result
     }
 }
