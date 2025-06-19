@@ -6,8 +6,10 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     var scrollView: NSScrollView!
     var groupByPopup: NSPopUpButton!
     var fontSizePopup: NSPopUpButton!
+    var showHeaderCheckbox: NSButton!
     var gridFontSize: CGFloat = 16
     var gridFont: NSFont = NSFont(name: "Times-Roman", size: 16) ?? NSFont.systemFont(ofSize: 16)
+    var showGroupHeaders = false
     enum Row {
         case groupHeader(String)
         case position(Position)
@@ -182,6 +184,19 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             fontSizePopup.heightAnchor.constraint(equalToConstant: 24)
         ])
 
+        // Header checkbox
+        showHeaderCheckbox = NSButton(checkboxWithTitle: "Show Headers", target: self, action: #selector(showHeaderToggled(_:)))
+        showHeaderCheckbox.translatesAutoresizingMaskIntoConstraints = false
+        showHeaderCheckbox.state = showGroupHeaders ? .on : .off
+        self.view.addSubview(showHeaderCheckbox)
+
+        NSLayoutConstraint.activate([
+            showHeaderCheckbox.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 10),
+            showHeaderCheckbox.leadingAnchor.constraint(equalTo: fontSizePopup.trailingAnchor, constant: 20),
+            showHeaderCheckbox.widthAnchor.constraint(equalToConstant: 250),
+            showHeaderCheckbox.heightAnchor.constraint(equalToConstant: 24)
+        ])
+    
         
         scrollView = NSScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -239,7 +254,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     override func viewDidLoad() {
         super.viewDidLoad()
         NSFontManager.shared.target = self
-        rows = buildRows(from: sampleData) { $0.assetClass }
+        rows = buildRows(from: sampleData,showHeader: showGroupHeaders) { $0.assetClass }
         tableView.reloadData()
     }
 
@@ -361,9 +376,9 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     @objc func groupingChanged(_ sender: NSPopUpButton) {
         switch sender.titleOfSelectedItem {
         case "Currency":
-            rows = buildRows(from: sampleData) { $0.currency }
+            rows = buildRows(from: sampleData,showHeader: showGroupHeaders) { $0.currency }
         default:
-            rows = buildRows(from: sampleData) { $0.assetClass }
+            rows = buildRows(from: sampleData,showHeader: showGroupHeaders) { $0.assetClass }
         }
         tableView.reloadData()
     }
@@ -376,13 +391,20 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         }
     }
     
+    @objc func showHeaderToggled(_ sender: NSButton) {
+        showGroupHeaders = (sender.state == .on)
+        // Reconstruit les lignes avec le bon regroupement actif
+        groupingChanged(groupByPopup)
+    }
+
+    
     // adjust height of rows dynamicaly
     func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
         return gridFontSize + 6 // ajustement souple (padding vertical)
     }
 
     
-    func buildRows(from positions: [Position], groupedBy: (Position) -> String) -> [Row] {
+    func buildRows(from positions: [Position],showHeader: Bool, groupedBy: (Position) -> String) -> [Row] {
         var enrichedPositions = positions
         let total = enrichedPositions.reduce(0) { $0 + $1.value }
         totalPortfolioValue = total
@@ -400,7 +422,10 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         var totalWeight: Double = 0
 
         for (key, group) in grouped.sorted(by: { $0.key < $1.key }) {
-            result.append(.groupHeader(key))
+            if showHeader {
+                result.append(.groupHeader(key))
+             }
+            //result.append(.groupHeader(key))
             result += group.map { .position($0) }
 
             let value = group.reduce(0) { $0 + $1.value }
