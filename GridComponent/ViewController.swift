@@ -219,7 +219,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         //tableView.gridColor = .lightGray
 
         let columns = [
-            ("Symbol", "symbol"),
+            ("Name", "name"),
             ("Currency", "currency"),
             ("Quantity", "quantity"),
             ("Cost Price", "costPrice"),
@@ -300,15 +300,15 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 
         switch rows[row] {
         case .groupHeader(let title):
-            text.stringValue = columnIdentifier == "symbol" ? title : ""
-            if columnIdentifier == "symbol" {
+            text.stringValue = columnIdentifier == "name" ? title : ""
+            if columnIdentifier == "name" {
                 text.font = NSFont.boldSystemFont(ofSize: gridFontSize+2)
                 text.textColor = .systemOrange
             }
 
         case .position(let p):
             switch columnIdentifier {
-            case "symbol": text.stringValue = p.symbol
+            case "name": text.stringValue = p.symbol
             case "currency": text.stringValue = p.currency
             case "quantity": text.stringValue = String(format: "%.0f", p.quantity)
             case "costPrice": text.stringValue = String(format: "%.2f", p.costPrice)
