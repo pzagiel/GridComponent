@@ -5,7 +5,10 @@ class TableViewPrinter {
     static func print(tableView: NSTableView) {
         let viewToPrint = generatePrintableView(from: tableView)
         
-        let printInfo = NSPrintInfo.shared
+        //let printInfo = NSPrintInfo.shared
+        // Force landscape
+        let printInfo = NSPrintInfo.shared.copy() as! NSPrintInfo
+        printInfo.orientation = .landscape
         printInfo.topMargin = 20
         printInfo.bottomMargin = 20
         printInfo.leftMargin = 20
@@ -51,6 +54,19 @@ class TableViewPrinter {
             let newCol = NSTableColumn(identifier: col.identifier)
             newCol.title = col.title
             newCol.width = col.width
+            // 👉 Modifier la font de l'en-tête
+            // Copier et modifier le headerCell
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: NSFont.boldSystemFont(ofSize: 16),
+                .foregroundColor: NSColor.darkGray
+            ]
+            let attributedTitle = NSAttributedString(string: col.title, attributes: attributes)
+
+            let headerCell = col.headerCell.copy() as! NSTableHeaderCell
+            headerCell.attributedStringValue = attributedTitle
+            newCol.headerCell = headerCell
+
+            
             tableCopy.addTableColumn(newCol)
         }
 
