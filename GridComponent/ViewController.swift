@@ -93,7 +93,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 //         printOperation.run()
 //    }
     
-    @IBAction func printDocument(_ sender: Any?) {
+    @IBAction func printDocumentOld(_ sender: Any?) {
         let printInfo = NSPrintInfo.shared
         printInfo.orientation = .landscape
         printInfo.topMargin = 20
@@ -106,7 +106,10 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         printOperation.run()
 
     }
-
+    
+    @IBAction func printDocument(_ sender: Any?) {
+        TableViewPrinter.print(tableView: self.tableView)
+    }
 
    
 
