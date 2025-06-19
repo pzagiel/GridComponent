@@ -308,11 +308,11 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             switch columnIdentifier {
             case "symbol":
                 text.stringValue = label
-                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+                text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
                 text.textColor = .systemBlue
             case "value":
                 text.stringValue = euroFormat(subtotal.totalValue)
-                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+                text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
                 text.textColor = .systemBlue
 //            case "gain":
 //                text.stringValue = percentFormat(subtotal.gain)
@@ -320,11 +320,11 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 //                text.textColor = subtotal.gain >= 0 ? .systemGreen : .systemRed
             case "pl":
                 text.stringValue = euroFormat(subtotal.pl)
-                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+                text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
                 text.textColor = .systemBlue
             case "weight":
                 text.stringValue = percentFormat(subtotal.weight*100)
-                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+                text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
                 text.textColor = .systemBlue
             default: text.stringValue = ""
             }
