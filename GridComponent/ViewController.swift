@@ -399,7 +399,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 
         case .grandTotal(let total):
             switch columnIdentifier {
-            case "symbol":
+            case "name":
                 text.stringValue = "Total"
                 text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
                 text.textColor = .systemBlue
@@ -434,6 +434,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             rows = buildRows(from: sampleData,showHeader: showGroupHeaders) { $0.assetClass }
         }
         tableView.reloadData()
+        autoResizeAllColumns()
     }
     
     @objc func fontSizeChanged(_ sender: NSPopUpButton) {
