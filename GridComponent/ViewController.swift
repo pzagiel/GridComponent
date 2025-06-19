@@ -332,12 +332,12 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         case .grandTotal(let total):
             switch columnIdentifier {
             case "symbol":
-                text.stringValue = "Total Portfolio"
-                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+                text.stringValue = "Total"
+                text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
                 text.textColor = .systemBlue
             case "value":
                 text.stringValue = euroFormat(total.totalValue)
-                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+                text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
                 text.textColor = .systemBlue
 //            case "gain":
 //                text.stringValue = percentFormat(total.gain)
@@ -345,11 +345,11 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 //                //text.textColor = total.gain >= 0 ? .systemGreen : .systemRed
             case "pl":
                 text.stringValue = euroFormat(total.pl)
-                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+                text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
                 text.textColor = .systemBlue
             case "weight":
                 text.stringValue = percentFormat(total.weight*100)
-                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+                text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
                 text.textColor = .systemBlue
             default: text.stringValue = ""
             }
