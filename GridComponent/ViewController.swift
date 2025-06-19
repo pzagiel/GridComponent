@@ -78,6 +78,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         gridFont = manager.convert(gridFont)
         gridFontSize = gridFont.pointSize
         tableView.reloadData()
+        autoResizeAllColumns()
     }
     
     @IBAction func runPageLayout(_ sender: Any?) {
@@ -216,6 +217,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         tableView.rowHeight = 20
         tableView.gridStyleMask = [.solidVerticalGridLineMask, .solidHorizontalGridLineMask]
         tableView.usesAlternatingRowBackgroundColors = false
+        tableView.sizeToFit()
         //tableView.gridColor = .lightGray
 
         let columns = [
@@ -257,12 +259,40 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             scrollView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
         ])
     }
+    func autoResizeAllColumns() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            for column in self.tableView.tableColumns {
+                self.autoResizeColumn(column, in: self.tableView)
+            }
+        }
+    }
 
+    func autoResizeColumn(_ column: NSTableColumn, in tableView: NSTableView) {
+        let columnIndex = tableView.tableColumns.firstIndex(of: column) ?? 0
+        let headerWidth = (column.headerCell.stringValue as NSString).size(withAttributes: [.font: NSFont.systemFont(ofSize: NSFont.systemFontSize)]).width
+
+        var maxWidth: CGFloat = headerWidth
+
+        for row in 0..<tableView.numberOfRows {
+            guard let view = tableView.view(atColumn: columnIndex, row: row, makeIfNecessary: true) as? NSTextField else { continue }
+            let text = view.stringValue as NSString
+            let font = view.font ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+            let textWidth = text.size(withAttributes: [.font: font]).width
+            maxWidth = max(maxWidth, textWidth)
+        }
+
+        // Ajout d’un petit padding (10 à 20 pts)
+        column.width = maxWidth + 5
+    }
+
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         NSFontManager.shared.target = self
         rows = buildRows(from: sampleData,showHeader: showGroupHeaders) { $0.assetClass }
         tableView.reloadData()
+        autoResizeAllColumns()
     }
 
     func euroFormat(_ amount: Double) -> String {
@@ -272,9 +302,25 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 2
         formatter.locale = Locale(identifier: "fr_BE")
+        formatter.usesGroupingSeparator = true // Active la séparation des milliers
         return formatter.string(from: NSNumber(value: amount)) ?? String(format: "%.2f", amount)
     }
 
+    func euroFormatNew(_ amount: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = Locale(identifier: "fr_BE") // Inclut le format EUR, virgule, etc.
+//        formatter.minimumFractionDigits = 2
+//        formatter.maximumFractionDigits = 2
+        formatter.usesGroupingSeparator = true
+        formatter.groupingSeparator = "?" // Test de séparateur visible
+        formatter.groupingSize = 3        // FORCÉ pour activer le regroupement
+        formatter.secondaryGroupingSize = 3
+        return formatter.string(from: NSNumber(value: amount)) ?? String(format: "%.2f", amount)
+    }
+
+
+    
     func percentFormat(_ value: Double) -> String {
         return String(format: "%.2f%%", value)
     }
@@ -321,6 +367,8 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
                 text.stringValue = percentFormat(p.gain)
                 text.textColor = p.gain >= 0 ? .systemGreen : .systemRed
             case "pl": text.stringValue = euroFormat(p.plAbsolute)
+                print(euroFormat(p.plAbsolute))
+                print(text.stringValue)
             case "value": text.stringValue = euroFormat(p.value)
             case "weight": text.stringValue = percentFormat(p.weight * 100)
             default: text.stringValue = ""
@@ -328,7 +376,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 
         case .subtotal(let label, let subtotal):
             switch columnIdentifier {
-            case "symbol":
+            case "name":
                 text.stringValue = label
                 text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
                 text.textColor = .systemBlue
