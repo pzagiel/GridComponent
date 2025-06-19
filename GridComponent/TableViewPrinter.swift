@@ -64,6 +64,7 @@ class TableViewPrinter {
 
             let headerCell = col.headerCell.copy() as! NSTableHeaderCell
             headerCell.attributedStringValue = attributedTitle
+            headerCell.alignment = col.headerCell.alignment // 👈 important
             newCol.headerCell = headerCell
 
             
