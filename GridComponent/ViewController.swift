@@ -283,7 +283,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         }
 
         // Ajout d’un petit padding (10 à 20 pts)
-        column.width = maxWidth + 5
+        column.width = maxWidth + 20
     }
 
     
@@ -367,8 +367,6 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
                 text.stringValue = percentFormat(p.gain)
                 text.textColor = p.gain >= 0 ? .systemGreen : .systemRed
             case "pl": text.stringValue = euroFormat(p.plAbsolute)
-                print(euroFormat(p.plAbsolute))
-                print(text.stringValue)
             case "value": text.stringValue = euroFormat(p.value)
             case "weight": text.stringValue = percentFormat(p.weight * 100)
             default: text.stringValue = ""
