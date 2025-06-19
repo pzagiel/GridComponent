@@ -60,7 +60,7 @@ class TableViewPrinter {
             paragraphStyle.alignment = .center // C'est le code qui parait fonctionner pour le centrage des titres
 
             let attributes: [NSAttributedString.Key: Any] = [
-                .font: NSFont.boldSystemFont(ofSize: 16),
+                .font: NSFont.boldSystemFont(ofSize: 14),
                 .foregroundColor: NSColor.darkGray,
                 .paragraphStyle: paragraphStyle
             ]
