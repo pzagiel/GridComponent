@@ -7,12 +7,14 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     var groupByPopup: NSPopUpButton!
     var fontSizePopup: NSPopUpButton!
     var showHeaderCheckbox: NSButton!
+    var showSubtotalsInHeadersCheckbox: NSButton!
     var gridFontSize: CGFloat = 16
     var gridFont: NSFont = NSFont(name: "Times-Roman", size: 16) ?? NSFont.systemFont(ofSize: 16)
     var showGroupHeaders = false
+    var showSubtotalsInHeaders = true
 
     enum Row {
-        case groupHeader(String, SubtotalData)
+        case groupHeader(String, SubtotalData?)
         case position(Position)
         case subtotal(String, SubtotalData)
         case grandTotal(SubtotalData)
@@ -181,6 +183,18 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             showHeaderCheckbox.widthAnchor.constraint(equalToConstant: 250),
             showHeaderCheckbox.heightAnchor.constraint(equalToConstant: 24)
         ])
+
+        showSubtotalsInHeadersCheckbox = NSButton(checkboxWithTitle: "Show Subtotals in Headers", target: self, action: #selector(showSubtotalsInHeadersToggled(_:)))
+        showSubtotalsInHeadersCheckbox.translatesAutoresizingMaskIntoConstraints = false
+        showSubtotalsInHeadersCheckbox.state = showSubtotalsInHeaders ? .on : .off
+        self.view.addSubview(showSubtotalsInHeadersCheckbox)
+
+        NSLayoutConstraint.activate([
+            showSubtotalsInHeadersCheckbox.topAnchor.constraint(equalTo: showHeaderCheckbox.bottomAnchor, constant: 10),
+            showSubtotalsInHeadersCheckbox.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 20),
+            showSubtotalsInHeadersCheckbox.widthAnchor.constraint(equalToConstant: 250),
+            showSubtotalsInHeadersCheckbox.heightAnchor.constraint(equalToConstant: 24)
+        ])
     
         scrollView = NSScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -303,22 +317,22 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         }
 
         switch rows[row] {
-        case .groupHeader(let title, let subtotal):
+        case .groupHeader(let title, let subtotalOpt):
             switch columnIdentifier {
             case "name":
                 text.stringValue = title
                 text.font = NSFont.boldSystemFont(ofSize: gridFontSize + 2)
                 text.textColor = .systemOrange
             case "value":
-                text.stringValue = euroFormat(subtotal.totalValue)
+                text.stringValue = subtotalOpt != nil ? euroFormat(subtotalOpt!.totalValue) : ""
                 text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
                 text.textColor = .systemOrange
             case "pl":
-                text.stringValue = euroFormat(subtotal.pl)
+                text.stringValue = subtotalOpt != nil ? euroFormat(subtotalOpt!.pl) : ""
                 text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
                 text.textColor = .systemOrange
             case "weight":
-                text.stringValue = percentFormat(subtotal.weight * 100)
+                text.stringValue = subtotalOpt != nil ? percentFormat(subtotalOpt!.weight * 100) : ""
                 text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
                 text.textColor = .systemOrange
             default:
@@ -417,6 +431,11 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         groupingChanged(groupByPopup)
     }
 
+    @objc func showSubtotalsInHeadersToggled(_ sender: NSButton) {
+        showSubtotalsInHeaders = (sender.state == .on)
+        groupingChanged(groupByPopup)
+    }
+
     func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
         return gridFontSize + 6
     }
@@ -447,13 +466,14 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             let subtotalData = SubtotalData(totalValue: value, pl: pl, weight: weight)
 
             if showHeader {
-                result.append(.groupHeader(label, subtotalData))
+                result.append(.groupHeader(label, showSubtotalsInHeaders ? subtotalData : nil))
             }
 
             result += group.map { .position($0) }
 
-            // Optionnel : garder ou enlever la ligne subtotal en dessous
-            result.append(.subtotal("Total \(label)", subtotalData))
+            if !showSubtotalsInHeaders {
+                result.append(.subtotal("Total \(label)", subtotalData))
+            }
 
             totalVal += value
             totalGain += gain
@@ -465,3 +485,4 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         return result
     }
 }
+
