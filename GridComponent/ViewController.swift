@@ -10,8 +10,9 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     var gridFontSize: CGFloat = 16
     var gridFont: NSFont = NSFont(name: "Times-Roman", size: 16) ?? NSFont.systemFont(ofSize: 16)
     var showGroupHeaders = false
+
     enum Row {
-        case groupHeader(String)
+        case groupHeader(String, SubtotalData)
         case position(Position)
         case subtotal(String, SubtotalData)
         case grandTotal(SubtotalData)
@@ -40,7 +41,6 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 
     struct SubtotalData {
         let totalValue: Double
-        //let gain: Double
         let pl: Double
         let weight: Double
     }
@@ -72,6 +72,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         Position(symbol: "JPY", currency: "JPY", assetClass: "4. Cash", quantity: 2220427, costPrice: 1.0, date: "-", price: 1.0, evol: 0.00, gain: 0.00),
         Position(symbol: "USD Dollar", currency: "USD", assetClass: "4. Cash", quantity: 609318, costPrice: 1.0, date: "-", price: 1.0, evol: 0.00, gain: 0.00)
     ]
+
     @objc func changeFont(_ sender: NSFontManager?) {
         guard let manager = sender else { return }
 
@@ -86,13 +87,6 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         let printInfo = NSPrintInfo.shared
         pageLayout.runModal(with: printInfo)
     }
-
-//    @IBAction func printDocumentOld(_ sender: Any?) {
-//        let printView = PrintDocument(tableView: tableView)
-//        let printInfo = NSPrintInfo.shared
-//        let printOperation = NSPrintOperation(view: printView, printInfo: printInfo)
-//         printOperation.run()
-//    }
     
     @IBAction func printDocumentOld(_ sender: Any?) {
         let printInfo = NSPrintInfo.shared
@@ -105,41 +99,33 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         let printView = PrintDocument(tableView: tableView, printInfo: printInfo)
         let printOperation = NSPrintOperation(view: printView, printInfo: printInfo)
         printOperation.run()
-
     }
     
     @IBAction func printDocument(_ sender: Any?) {
         TableViewPrinter.print(tableView: self.tableView)
     }
 
-   
-
-
-
     func viewForPrinting() -> NSView {
         let headerView = tableView.headerView!
         let contentView = tableView.enclosingScrollView!.documentView!
 
-        // Taille totale = hauteur de l’en-tête + hauteur du contenu
         let totalHeight = headerView.frame.height + contentView.frame.height
         let totalWidth = contentView.frame.width
 
         let containerView = NSView(frame: NSRect(x: 0, y: 0, width: totalWidth, height: totalHeight))
 
-        // Copier l’en-tête
         let headerCopy = NSTableHeaderView(frame: headerView.frame)
         headerCopy.tableView = tableView
         headerCopy.frame.origin = .zero
         containerView.addSubview(headerCopy)
 
-        // Copier la table elle-même
         let tableCopy = NSTableView(frame: tableView.frame)
         for column in tableView.tableColumns {
             tableCopy.addTableColumn(column)
         }
         tableCopy.delegate = tableView.delegate
         tableCopy.dataSource = tableView.dataSource
-        tableCopy.headerView = nil // Sinon double en-tête
+        tableCopy.headerView = nil
         tableCopy.reloadData()
 
         let scroll = NSScrollView(frame: NSRect(x: 0, y: headerView.frame.height, width: totalWidth, height: contentView.frame.height))
@@ -152,11 +138,8 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         return containerView
     }
 
-
-    
     override func loadView() {
         self.view = NSView(frame: NSRect(x: 0, y: 0, width: 1300, height: 800))
-        //self.view.appearance = NSAppearance(named: .aqua)
 
         groupByPopup = NSPopUpButton()
         groupByPopup.translatesAutoresizingMaskIntoConstraints = false
@@ -172,7 +155,6 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             groupByPopup.heightAnchor.constraint(equalToConstant: 24)
         ])
         
-        // FontSize PopupUp menu
         fontSizePopup = NSPopUpButton()
         fontSizePopup.translatesAutoresizingMaskIntoConstraints = false
         fontSizePopup.addItems(withTitles: ["12","13","14","15","16","17","18","20","22","24"])
@@ -188,7 +170,6 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             fontSizePopup.heightAnchor.constraint(equalToConstant: 24)
         ])
 
-        // Header checkbox
         showHeaderCheckbox = NSButton(checkboxWithTitle: "Show Headers", target: self, action: #selector(showHeaderToggled(_:)))
         showHeaderCheckbox.translatesAutoresizingMaskIntoConstraints = false
         showHeaderCheckbox.state = showGroupHeaders ? .on : .off
@@ -201,7 +182,6 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             showHeaderCheckbox.heightAnchor.constraint(equalToConstant: 24)
         ])
     
-        
         scrollView = NSScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.autoresizingMask = [.width, .height]
@@ -211,14 +191,11 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         scrollView.automaticallyAdjustsContentInsets = false
         scrollView.documentView = tableView
 
-
-
         tableView = NSTableView(frame: scrollView.bounds)
         tableView.rowHeight = 20
         tableView.gridStyleMask = [.solidVerticalGridLineMask, .solidHorizontalGridLineMask]
         tableView.usesAlternatingRowBackgroundColors = false
         tableView.sizeToFit()
-        //tableView.gridColor = .lightGray
 
         let columns = [
             ("Name", "name"),
@@ -238,10 +215,9 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(identifier))
             column.title = title
             column.width = 100
-            // Centrage du titre de colonne
-               if let headerCell = column.headerCell as? NSTableHeaderCell {
-                   headerCell.alignment = .center
-               }
+            if let headerCell = column.headerCell as? NSTableHeaderCell {
+                headerCell.alignment = .center
+            }
             tableView.addTableColumn(column)
         }
 
@@ -259,6 +235,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             scrollView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
         ])
     }
+
     func autoResizeAllColumns() {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
@@ -282,15 +259,13 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             maxWidth = max(maxWidth, textWidth)
         }
 
-        // Ajout d’un petit padding (10 à 20 pts)
         column.width = maxWidth + 20
     }
 
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         NSFontManager.shared.target = self
-        rows = buildRows(from: sampleData,showHeader: showGroupHeaders) { $0.assetClass }
+        rows = buildRows(from: sampleData, showHeader: showGroupHeaders) { $0.assetClass }
         tableView.reloadData()
         autoResizeAllColumns()
     }
@@ -302,25 +277,10 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 2
         formatter.locale = Locale(identifier: "fr_BE")
-        formatter.usesGroupingSeparator = true // Active la séparation des milliers
-        return formatter.string(from: NSNumber(value: amount)) ?? String(format: "%.2f", amount)
-    }
-
-    func euroFormatNew(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.locale = Locale(identifier: "fr_BE") // Inclut le format EUR, virgule, etc.
-//        formatter.minimumFractionDigits = 2
-//        formatter.maximumFractionDigits = 2
         formatter.usesGroupingSeparator = true
-        formatter.groupingSeparator = "?" // Test de séparateur visible
-        formatter.groupingSize = 3        // FORCÉ pour activer le regroupement
-        formatter.secondaryGroupingSize = 3
         return formatter.string(from: NSNumber(value: amount)) ?? String(format: "%.2f", amount)
     }
 
-
-    
     func percentFormat(_ value: Double) -> String {
         return String(format: "%.2f%%", value)
     }
@@ -334,8 +294,6 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         text.isBordered = false
         text.isEditable = false
         text.backgroundColor = .clear
-        //text.font = NSFont(name: "Times-Roman", size: gridFontSize)
-        // Get Font of Font Manager
         text.font = gridFont
 
         guard let columnIdentifier = tableColumn?.identifier.rawValue else { return text }
@@ -345,11 +303,26 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         }
 
         switch rows[row] {
-        case .groupHeader(let title):
-            text.stringValue = columnIdentifier == "name" ? title : ""
-            if columnIdentifier == "name" {
-                text.font = NSFont.boldSystemFont(ofSize: gridFontSize+2)
+        case .groupHeader(let title, let subtotal):
+            switch columnIdentifier {
+            case "name":
+                text.stringValue = title
+                text.font = NSFont.boldSystemFont(ofSize: gridFontSize + 2)
                 text.textColor = .systemOrange
+            case "value":
+                text.stringValue = euroFormat(subtotal.totalValue)
+                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+                text.textColor = .systemOrange
+            case "pl":
+                text.stringValue = euroFormat(subtotal.pl)
+                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+                text.textColor = .systemOrange
+            case "weight":
+                text.stringValue = percentFormat(subtotal.weight * 100)
+                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
+                text.textColor = .systemOrange
+            default:
+                text.stringValue = ""
             }
 
         case .position(let p):
@@ -382,19 +355,16 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
                 text.stringValue = euroFormat(subtotal.totalValue)
                 text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
                 text.textColor = .systemBlue
-//            case "gain":
-//                text.stringValue = percentFormat(subtotal.gain)
-//                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
-//                text.textColor = subtotal.gain >= 0 ? .systemGreen : .systemRed
             case "pl":
                 text.stringValue = euroFormat(subtotal.pl)
                 text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
                 text.textColor = .systemBlue
             case "weight":
-                text.stringValue = percentFormat(subtotal.weight*100)
+                text.stringValue = percentFormat(subtotal.weight * 100)
                 text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
                 text.textColor = .systemBlue
-            default: text.stringValue = ""
+            default:
+                text.stringValue = ""
             }
 
         case .grandTotal(let total):
@@ -407,19 +377,16 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
                 text.stringValue = euroFormat(total.totalValue)
                 text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
                 text.textColor = .systemBlue
-//            case "gain":
-//                text.stringValue = percentFormat(total.gain)
-//                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
-//                //text.textColor = total.gain >= 0 ? .systemGreen : .systemRed
             case "pl":
                 text.stringValue = euroFormat(total.pl)
                 text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
                 text.textColor = .systemBlue
             case "weight":
-                text.stringValue = percentFormat(total.weight*100)
+                text.stringValue = percentFormat(total.weight * 100)
                 text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
                 text.textColor = .systemBlue
-            default: text.stringValue = ""
+            default:
+                text.stringValue = ""
             }
         }
 
@@ -429,9 +396,9 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     @objc func groupingChanged(_ sender: NSPopUpButton) {
         switch sender.titleOfSelectedItem {
         case "Currency":
-            rows = buildRows(from: sampleData,showHeader: showGroupHeaders) { $0.currency }
+            rows = buildRows(from: sampleData, showHeader: showGroupHeaders) { $0.currency }
         default:
-            rows = buildRows(from: sampleData,showHeader: showGroupHeaders) { $0.assetClass }
+            rows = buildRows(from: sampleData, showHeader: showGroupHeaders) { $0.assetClass }
         }
         tableView.reloadData()
         autoResizeAllColumns()
@@ -447,18 +414,14 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     
     @objc func showHeaderToggled(_ sender: NSButton) {
         showGroupHeaders = (sender.state == .on)
-        // Reconstruit les lignes avec le bon regroupement actif
         groupingChanged(groupByPopup)
     }
 
-    
-    // adjust height of rows dynamicaly
     func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
-        return gridFontSize + 6 // ajustement souple (padding vertical)
+        return gridFontSize + 6
     }
 
-    
-    func buildRows(from positions: [Position],showHeader: Bool, groupedBy: (Position) -> String) -> [Row] {
+    func buildRows(from positions: [Position], showHeader: Bool, groupedBy: (Position) -> String) -> [Row] {
         var enrichedPositions = positions
         let total = enrichedPositions.reduce(0) { $0 + $1.value }
         totalPortfolioValue = total
@@ -476,19 +439,21 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         var totalWeight: Double = 0
 
         for (key, group) in grouped.sorted(by: { $0.key < $1.key }) {
-            if showHeader {
-                let label = key.count > 3 ? String(key.dropFirst(3)) : key
-                result.append(.groupHeader(label))
-             }
-            //result.append(.groupHeader(key))
-            result += group.map { .position($0) }
-
             let value = group.reduce(0) { $0 + $1.value }
             let gain = group.reduce(0) { $0 + $1.gain }
             let pl = group.reduce(0) { $0 + $1.plAbsolute }
             let weight = group.reduce(0) { $0 + $1.weight }
             let label = key.count > 3 ? String(key.dropFirst(3)) : key
-            result.append(.subtotal("Total \(label)", SubtotalData(totalValue: value, pl: pl,weight: weight)))
+            let subtotalData = SubtotalData(totalValue: value, pl: pl, weight: weight)
+
+            if showHeader {
+                result.append(.groupHeader(label, subtotalData))
+            }
+
+            result += group.map { .position($0) }
+
+            // Optionnel : garder ou enlever la ligne subtotal en dessous
+            result.append(.subtotal("Total \(label)", subtotalData))
 
             totalVal += value
             totalGain += gain
@@ -496,8 +461,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             totalWeight += weight
         }
 
-        result.append(.grandTotal(SubtotalData(totalValue: totalVal, pl: totalPL,weight: totalWeight)))
+        result.append(.grandTotal(SubtotalData(totalValue: totalVal, pl: totalPL, weight: totalWeight)))
         return result
     }
 }
-
