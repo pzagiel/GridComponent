@@ -14,7 +14,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     var showSubtotalsInHeaders = true
 
     enum Row {
-        case groupHeader(String, SubtotalData?)
+        case groupHeader(label: String, key: String, subtotal: SubtotalData?)
         case position(Position)
         case subtotal(String, SubtotalData)
         case grandTotal(SubtotalData)
@@ -27,187 +27,12 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     }
 
     var rows: [Row] = []
-
     var totalPortfolioValue: Double = 0
-
     let sampleData: [Position] = PortfolioData.shared.samplePositions
-    
-    @objc func changeFont(_ sender: NSFontManager?) {
-        guard let manager = sender else { return }
+    var groupExpandedState: [String: Bool] = [:]
 
-        gridFont = manager.convert(gridFont)
-        gridFontSize = gridFont.pointSize
-        tableView.reloadData()
-        autoResizeAllColumns()
-    }
-    
-    @IBAction func runPageLayout(_ sender: Any?) {
-        let pageLayout = NSPageLayout()
-        let printInfo = NSPrintInfo.shared
-        pageLayout.runModal(with: printInfo)
-    }
-    
-    @IBAction func printDocumentOld(_ sender: Any?) {
-        let printInfo = NSPrintInfo.shared
-        printInfo.orientation = .landscape
-        printInfo.topMargin = 20
-        printInfo.leftMargin = 20
-        printInfo.rightMargin = 20
-        printInfo.bottomMargin = 20
-
-        let printView = PrintDocument(tableView: tableView, printInfo: printInfo)
-        let printOperation = NSPrintOperation(view: printView, printInfo: printInfo)
-        printOperation.run()
-    }
-    
-    @IBAction func printDocument(_ sender: Any?) {
-        TableViewPrinter.print(tableView: self.tableView)
-    }
-
-    func viewForPrinting() -> NSView {
-        let headerView = tableView.headerView!
-        let contentView = tableView.enclosingScrollView!.documentView!
-
-        let totalHeight = headerView.frame.height + contentView.frame.height
-        let totalWidth = contentView.frame.width
-
-        let containerView = NSView(frame: NSRect(x: 0, y: 0, width: totalWidth, height: totalHeight))
-
-        let headerCopy = NSTableHeaderView(frame: headerView.frame)
-        headerCopy.tableView = tableView
-        headerCopy.frame.origin = .zero
-        containerView.addSubview(headerCopy)
-
-        let tableCopy = NSTableView(frame: tableView.frame)
-        for column in tableView.tableColumns {
-            tableCopy.addTableColumn(column)
-        }
-        tableCopy.delegate = tableView.delegate
-        tableCopy.dataSource = tableView.dataSource
-        tableCopy.headerView = nil
-        tableCopy.reloadData()
-
-        let scroll = NSScrollView(frame: NSRect(x: 0, y: headerView.frame.height, width: totalWidth, height: contentView.frame.height))
-        scroll.documentView = tableCopy
-        scroll.hasVerticalScroller = false
-        scroll.hasHorizontalScroller = false
-        scroll.borderType = .noBorder
-        containerView.addSubview(scroll)
-
-        return containerView
-    }
-
-    func loadViewOld() {
-        self.view = NSView(frame: NSRect(x: 0, y: 0, width: 1300, height: 800))
-
-        groupByPopup = NSPopUpButton()
-        groupByPopup.translatesAutoresizingMaskIntoConstraints = false
-        groupByPopup.addItems(withTitles: ["Asset Class", "Currency"])
-        groupByPopup.target = self
-        groupByPopup.action = #selector(groupingChanged(_:))
-        self.view.addSubview(groupByPopup)
-
-        NSLayoutConstraint.activate([
-            groupByPopup.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 10),
-            groupByPopup.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 20),
-            groupByPopup.widthAnchor.constraint(equalToConstant: 200),
-            groupByPopup.heightAnchor.constraint(equalToConstant: 24)
-        ])
-        
-        fontSizePopup = NSPopUpButton()
-        fontSizePopup.translatesAutoresizingMaskIntoConstraints = false
-        fontSizePopup.addItems(withTitles: ["12","13","14","15","16","17","18","20","22","24"])
-        fontSizePopup.selectItem(withTitle: "\(Int(gridFontSize))")
-        fontSizePopup.target = self
-        fontSizePopup.action = #selector(fontSizeChanged(_:))
-        self.view.addSubview(fontSizePopup)
-
-        NSLayoutConstraint.activate([
-            fontSizePopup.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 10),
-            fontSizePopup.leadingAnchor.constraint(equalTo: groupByPopup.trailingAnchor, constant: 20),
-            fontSizePopup.widthAnchor.constraint(equalToConstant: 100),
-            fontSizePopup.heightAnchor.constraint(equalToConstant: 24)
-        ])
-
-        showHeaderCheckbox = NSButton(checkboxWithTitle: "Show Headers", target: self, action: #selector(showHeaderToggled(_:)))
-        showHeaderCheckbox.translatesAutoresizingMaskIntoConstraints = false
-        showHeaderCheckbox.state = showGroupHeaders ? .on : .off
-        self.view.addSubview(showHeaderCheckbox)
-
-        NSLayoutConstraint.activate([
-            showHeaderCheckbox.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 10),
-            showHeaderCheckbox.leadingAnchor.constraint(equalTo: fontSizePopup.trailingAnchor, constant: 20),
-            showHeaderCheckbox.widthAnchor.constraint(equalToConstant: 250),
-            showHeaderCheckbox.heightAnchor.constraint(equalToConstant: 24)
-        ])
-
-        showSubtotalsInHeadersCheckbox = NSButton(checkboxWithTitle: "Show Subtotals in Headers", target: self, action: #selector(showSubtotalsInHeadersToggled(_:)))
-        showSubtotalsInHeadersCheckbox.translatesAutoresizingMaskIntoConstraints = false
-        showSubtotalsInHeadersCheckbox.state = showSubtotalsInHeaders ? .on : .off
-        self.view.addSubview(showSubtotalsInHeadersCheckbox)
-
-        NSLayoutConstraint.activate([
-            showSubtotalsInHeadersCheckbox.topAnchor.constraint(equalTo: showHeaderCheckbox.bottomAnchor, constant: 10),
-            showSubtotalsInHeadersCheckbox.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 20),
-            showSubtotalsInHeadersCheckbox.widthAnchor.constraint(equalToConstant: 250),
-            showSubtotalsInHeadersCheckbox.heightAnchor.constraint(equalToConstant: 24)
-        ])
-    
-        scrollView = NSScrollView()
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.autoresizingMask = [.width, .height]
-        scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = false
-        scrollView.autohidesScrollers = false
-        scrollView.automaticallyAdjustsContentInsets = false
-        scrollView.documentView = tableView
-
-        tableView = NSTableView(frame: scrollView.bounds)
-        tableView.rowHeight = 20
-        tableView.gridStyleMask = [.solidVerticalGridLineMask, .solidHorizontalGridLineMask]
-        tableView.usesAlternatingRowBackgroundColors = false
-        tableView.sizeToFit()
-
-        let columns = [
-            ("Name", "name"),
-            ("Currency", "currency"),
-            ("Quantity", "quantity"),
-            ("Cost Price", "costPrice"),
-            ("Date", "date"),
-            ("Price", "price"),
-            ("Evol", "evol"),
-            ("YTD", "gain"),
-            ("P/L (€)", "pl"),
-            ("Mkt Val", "value"),
-            ("Weight", "weight")
-        ]
-
-        for (title, identifier) in columns {
-            let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(identifier))
-            column.title = title
-            column.width = 100
-            if let headerCell = column.headerCell as? NSTableHeaderCell {
-                headerCell.alignment = .center
-            }
-            tableView.addTableColumn(column)
-        }
-
-        tableView.delegate = self
-        tableView.dataSource = self
-        tableView.headerView = NSTableHeaderView()
-
-        scrollView.documentView = tableView
-        self.view.addSubview(scrollView)
-
-        NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: groupByPopup.bottomAnchor, constant: 10),
-            scrollView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
-        ])
-    }
     override func loadView() {
-        self.view = NSView(frame: NSRect(x: 0, y: 0, width: 1300, height: 900)) // hauteur suffisante
+        self.view = NSView(frame: NSRect(x: 0, y: 0, width: 1300, height: 900))
 
         groupByPopup = NSPopUpButton()
         groupByPopup.translatesAutoresizingMaskIntoConstraints = false
@@ -234,26 +59,20 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         showSubtotalsInHeadersCheckbox.state = showSubtotalsInHeaders ? .on : .off
         self.view.addSubview(showSubtotalsInHeadersCheckbox)
 
-        // Contraintes :
-
         NSLayoutConstraint.activate([
-            // groupByPopup en haut à gauche
             groupByPopup.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 10),
             groupByPopup.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 20),
             groupByPopup.widthAnchor.constraint(equalToConstant: 200),
             groupByPopup.heightAnchor.constraint(equalToConstant: 24),
 
-            // fontSizePopup à droite de groupByPopup
             fontSizePopup.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 10),
             fontSizePopup.leadingAnchor.constraint(equalTo: groupByPopup.trailingAnchor, constant: 20),
             fontSizePopup.widthAnchor.constraint(equalToConstant: 100),
             fontSizePopup.heightAnchor.constraint(equalToConstant: 24),
 
-            // showHeaderCheckbox à droite de fontSizePopup (marge 20)
             showHeaderCheckbox.centerYAnchor.constraint(equalTo: groupByPopup.centerYAnchor),
             showHeaderCheckbox.leadingAnchor.constraint(equalTo: fontSizePopup.trailingAnchor, constant: 20),
 
-            // showSubtotalsInHeadersCheckbox à droite de showHeaderCheckbox (marge 20)
             showSubtotalsInHeadersCheckbox.centerYAnchor.constraint(equalTo: groupByPopup.centerYAnchor),
             showSubtotalsInHeadersCheckbox.leadingAnchor.constraint(equalTo: showHeaderCheckbox.trailingAnchor, constant: 20),
         ])
@@ -300,6 +119,9 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         tableView.dataSource = self
         tableView.headerView = NSTableHeaderView()
 
+        tableView.target = self
+        tableView.doubleAction = #selector(tableViewDoubleClick(_:))
+
         scrollView.documentView = tableView
         self.view.addSubview(scrollView)
 
@@ -311,7 +133,13 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         ])
     }
 
-
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        NSFontManager.shared.target = self
+        rows = buildRows(from: sampleData, showHeader: showGroupHeaders) { $0.assetClass }
+        tableView.reloadData()
+        autoResizeAllColumns()
+    }
 
     func autoResizeAllColumns() {
         DispatchQueue.main.async { [weak self] in
@@ -339,14 +167,6 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         column.width = maxWidth + 20
     }
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        NSFontManager.shared.target = self
-        rows = buildRows(from: sampleData, showHeader: showGroupHeaders) { $0.assetClass }
-        tableView.reloadData()
-        autoResizeAllColumns()
-    }
-
     func euroFormat(_ amount: Double) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
@@ -366,6 +186,10 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         return rows.count
     }
 
+    func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
+        return gridFontSize + 6
+    }
+
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let text = NSTextField()
         text.isBordered = false
@@ -380,10 +204,10 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         }
 
         switch rows[row] {
-        case .groupHeader(let title, let subtotalOpt):
+        case .groupHeader(let label, _, let subtotalOpt):
             switch columnIdentifier {
             case "name":
-                text.stringValue = title
+                text.stringValue = label
                 text.font = NSFont.boldSystemFont(ofSize: gridFontSize + 2)
                 text.textColor = .systemOrange
             case "value":
@@ -480,7 +304,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         tableView.reloadData()
         autoResizeAllColumns()
     }
-    
+
     @objc func fontSizeChanged(_ sender: NSPopUpButton) {
         if let selected = sender.titleOfSelectedItem,
            let selectedInt = Int(selected) {
@@ -488,7 +312,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             tableView.reloadData()
         }
     }
-    
+
     @objc func showHeaderToggled(_ sender: NSButton) {
         showGroupHeaders = (sender.state == .on)
         groupingChanged(groupByPopup)
@@ -499,8 +323,25 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         groupingChanged(groupByPopup)
     }
 
-    func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
-        return gridFontSize + 6
+    @objc func tableViewDoubleClick(_ sender: Any) {
+        let row = tableView.clickedRow
+        guard row >= 0 else { return }
+
+        switch rows[row] {
+        case .groupHeader(_, let key, _):
+            let currentState = groupExpandedState[key] ?? true
+            groupExpandedState[key] = !currentState
+
+            rows = buildRows(from: sampleData, showHeader: showGroupHeaders) { pos in
+                switch groupByPopup.titleOfSelectedItem {
+                case "Currency": return pos.currency
+                default: return pos.assetClass
+                }
+            }
+            tableView.reloadData()
+        default:
+            break
+        }
     }
 
     func buildRows(from positions: [Position], showHeader: Bool, groupedBy: (Position) -> String) -> [Row] {
@@ -528,11 +369,17 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             let label = key.count > 3 ? String(key.dropFirst(3)) : key
             let subtotalData = SubtotalData(totalValue: value, pl: pl, weight: weight)
 
-            if showHeader {
-                result.append(.groupHeader(label, showSubtotalsInHeaders ? subtotalData : nil))
+            if groupExpandedState[key] == nil {
+                groupExpandedState[key] = true
             }
 
-            result += group.map { .position($0) }
+            if showHeader {
+                result.append(.groupHeader(label: label, key: key, subtotal: showSubtotalsInHeaders ? subtotalData : nil))
+            }
+
+            if groupExpandedState[key] == true {
+                result += group.map { .position($0) }
+            }
 
             if !showSubtotalsInHeaders {
                 result.append(.subtotal("Total \(label)", subtotalData))
