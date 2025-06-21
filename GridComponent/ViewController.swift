@@ -1,5 +1,19 @@
 import Cocoa
 
+extension NSButton {
+    func setTitleColor(_ color: NSColor) {
+        let style = NSMutableParagraphStyle()
+        style.alignment = self.alignment
+        let attributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: color,
+            .font: self.font ?? NSFont.systemFont(ofSize: NSFont.systemFontSize),
+            .paragraphStyle: style
+        ]
+        let attributedTitle = NSAttributedString(string: self.title, attributes: attributes)
+        self.attributedTitle = attributedTitle
+    }
+}
+
 class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
 
     var tableView: NSTableView!
@@ -152,16 +166,23 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
 
     func autoResizeColumn(_ column: NSTableColumn, in tableView: NSTableView) {
         let columnIndex = tableView.tableColumns.firstIndex(of: column) ?? 0
+
         let headerWidth = (column.headerCell.stringValue as NSString).size(withAttributes: [.font: NSFont.systemFont(ofSize: NSFont.systemFontSize)]).width
 
         var maxWidth: CGFloat = headerWidth
 
         for row in 0..<tableView.numberOfRows {
-            guard let view = tableView.view(atColumn: columnIndex, row: row, makeIfNecessary: true) as? NSTextField else { continue }
-            let text = view.stringValue as NSString
-            let font = view.font ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
-            let textWidth = text.size(withAttributes: [.font: font]).width
-            maxWidth = max(maxWidth, textWidth)
+            if let button = tableView.view(atColumn: columnIndex, row: row, makeIfNecessary: true) as? NSButton {
+                let title = button.title as NSString
+                let font = button.font ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+                let textWidth = title.size(withAttributes: [.font: font]).width
+                maxWidth = max(maxWidth, textWidth)
+            } else if let text = tableView.view(atColumn: columnIndex, row: row, makeIfNecessary: true) as? NSTextField {
+                let string = text.stringValue as NSString
+                let font = text.font ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+                let textWidth = string.size(withAttributes: [.font: font]).width
+                maxWidth = max(maxWidth, textWidth)
+            }
         }
 
         column.width = maxWidth + 20
@@ -191,42 +212,63 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     }
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
-        let text = NSTextField()
-        text.isBordered = false
-        text.isEditable = false
-        text.backgroundColor = .clear
-        text.font = gridFont
-
-        guard let columnIdentifier = tableColumn?.identifier.rawValue else { return text }
-
-        if ["quantity", "costPrice", "price", "evol", "gain", "pl", "value", "weight"].contains(columnIdentifier) {
-            text.alignment = .right
-        }
+        guard let columnIdentifier = tableColumn?.identifier.rawValue else { return nil }
 
         switch rows[row] {
-        case .groupHeader(let label, _, let subtotalOpt):
-            switch columnIdentifier {
-            case "name":
-                text.stringValue = label
-                text.font = NSFont.boldSystemFont(ofSize: gridFontSize + 2)
-                text.textColor = .systemOrange
-            case "value":
-                text.stringValue = subtotalOpt != nil ? euroFormat(subtotalOpt!.totalValue) : ""
+        case .groupHeader(let label, let key, let subtotalOpt):
+            if columnIdentifier == "name" {
+                let button = NSButton(title: "", target: self, action: #selector(toggleGroupExpansion(_:)))
+                button.isBordered = false
+                button.font = NSFont.boldSystemFont(ofSize: gridFontSize + 2)
+                button.alignment = .left
+                button.translatesAutoresizingMaskIntoConstraints = false
+
+                let symbol = groupExpandedState[key] == true ? "−" : "+"
+                button.title = "\(symbol)  \(label)"
+                button.setTitleColor(.systemOrange)
+
+                button.identifier = NSUserInterfaceItemIdentifier(rawValue: key)
+
+                return button
+            } else {
+                let text = NSTextField()
+                text.isBordered = false
+                text.isEditable = false
+                text.backgroundColor = .clear
                 text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
                 text.textColor = .systemOrange
-            case "pl":
-                text.stringValue = subtotalOpt != nil ? euroFormat(subtotalOpt!.pl) : ""
-                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
-                text.textColor = .systemOrange
-            case "weight":
-                text.stringValue = subtotalOpt != nil ? percentFormat(subtotalOpt!.weight * 100) : ""
-                text.font = NSFont.boldSystemFont(ofSize: gridFontSize)
-                text.textColor = .systemOrange
-            default:
-                text.stringValue = ""
+                switch columnIdentifier {
+                case "value":
+                    text.stringValue = subtotalOpt != nil ? euroFormat(subtotalOpt!.totalValue) : ""
+                    text.alignment = .right
+                case "pl":
+                    text.stringValue = subtotalOpt != nil ? euroFormat(subtotalOpt!.pl) : ""
+                    text.alignment = .right
+                case "weight":
+                    text.stringValue = subtotalOpt != nil ? percentFormat(subtotalOpt!.weight * 100) : ""
+                    text.alignment = .right
+                default:
+                    text.stringValue = ""
+                    text.alignment = .center
+                }
+                return text
             }
 
         case .position(let p):
+            let text = NSTextField()
+            text.isBordered = false
+            text.isEditable = false
+            text.backgroundColor = .clear
+            text.font = gridFont
+
+            if columnIdentifier == "name" {
+                text.alignment = .left
+            } else if ["quantity", "costPrice", "price", "evol", "gain", "pl", "value", "weight"].contains(columnIdentifier) {
+                text.alignment = .right
+            } else {
+                text.alignment = .center
+            }
+
             switch columnIdentifier {
             case "name": text.stringValue = p.symbol
             case "currency": text.stringValue = p.currency
@@ -245,53 +287,82 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             case "weight": text.stringValue = percentFormat(p.weight * 100)
             default: text.stringValue = ""
             }
+            return text
 
         case .subtotal(let label, let subtotal):
+            let text = NSTextField()
+            text.isBordered = false
+            text.isEditable = false
+            text.backgroundColor = .clear
+            text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
+            text.textColor = .systemBlue
+
+            if columnIdentifier == "name" {
+                text.alignment = .left
+            } else if ["value", "pl", "weight"].contains(columnIdentifier) {
+                text.alignment = .right
+            } else {
+                text.alignment = .center
+            }
+
             switch columnIdentifier {
             case "name":
                 text.stringValue = label
-                text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
-                text.textColor = .systemBlue
             case "value":
                 text.stringValue = euroFormat(subtotal.totalValue)
-                text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
-                text.textColor = .systemBlue
             case "pl":
                 text.stringValue = euroFormat(subtotal.pl)
-                text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
-                text.textColor = .systemBlue
             case "weight":
                 text.stringValue = percentFormat(subtotal.weight * 100)
-                text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
-                text.textColor = .systemBlue
             default:
                 text.stringValue = ""
             }
+            return text
 
         case .grandTotal(let total):
+            let text = NSTextField()
+            text.isBordered = false
+            text.isEditable = false
+            text.backgroundColor = .clear
+            text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
+            text.textColor = .systemBlue
+
+            if columnIdentifier == "name" {
+                text.alignment = .left
+            } else if ["value", "pl", "weight"].contains(columnIdentifier) {
+                text.alignment = .right
+            } else {
+                text.alignment = .center
+            }
+
             switch columnIdentifier {
             case "name":
                 text.stringValue = "Total"
-                text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
-                text.textColor = .systemBlue
             case "value":
                 text.stringValue = euroFormat(total.totalValue)
-                text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
-                text.textColor = .systemBlue
             case "pl":
                 text.stringValue = euroFormat(total.pl)
-                text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
-                text.textColor = .systemBlue
             case "weight":
                 text.stringValue = percentFormat(total.weight * 100)
-                text.font = NSFontManager.shared.convert(gridFont, toHaveTrait: .boldFontMask)
-                text.textColor = .systemBlue
             default:
                 text.stringValue = ""
             }
+            return text
         }
+    }
 
-        return text
+    @objc func toggleGroupExpansion(_ sender: NSButton) {
+        guard let key = sender.identifier?.rawValue else { return }
+        let currentState = groupExpandedState[key] ?? true
+        groupExpandedState[key] = !currentState
+
+        rows = buildRows(from: sampleData, showHeader: showGroupHeaders) { pos in
+            switch groupByPopup.titleOfSelectedItem {
+            case "Currency": return pos.currency
+            default: return pos.assetClass
+            }
+        }
+        tableView.reloadData()
     }
 
     @objc func groupingChanged(_ sender: NSPopUpButton) {
@@ -304,18 +375,20 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         tableView.reloadData()
         autoResizeAllColumns()
     }
-    
-    @objc func changeFont(_ sender: NSFontManager?) {
-          guard let manager = sender else { return }
 
-          gridFont = manager.convert(gridFont)
-          gridFontSize = gridFont.pointSize
-          tableView.reloadData()
-          autoResizeAllColumns()
-      }
+    @objc func changeFont(_ sender: NSFontManager?) {
+        guard let manager = sender else { return }
+
+        gridFont = manager.convert(gridFont)
+        gridFontSize = gridFont.pointSize
+        tableView.reloadData()
+        autoResizeAllColumns()
+    }
+
     @IBAction func printDocument(_ sender: Any?) {
-         TableViewPrinter.print(tableView: self.tableView)
-     }
+        TableViewPrinter.print(tableView: self.tableView)
+    }
+
     @objc func fontSizeChanged(_ sender: NSPopUpButton) {
         if let selected = sender.titleOfSelectedItem,
            let selectedInt = Int(selected) {
