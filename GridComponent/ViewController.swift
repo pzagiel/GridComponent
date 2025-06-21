@@ -304,7 +304,18 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         tableView.reloadData()
         autoResizeAllColumns()
     }
+    
+    @objc func changeFont(_ sender: NSFontManager?) {
+          guard let manager = sender else { return }
 
+          gridFont = manager.convert(gridFont)
+          gridFontSize = gridFont.pointSize
+          tableView.reloadData()
+          autoResizeAllColumns()
+      }
+    @IBAction func printDocument(_ sender: Any?) {
+         TableViewPrinter.print(tableView: self.tableView)
+     }
     @objc func fontSizeChanged(_ sender: NSPopUpButton) {
         if let selected = sender.titleOfSelectedItem,
            let selectedInt = Int(selected) {
